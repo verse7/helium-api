@@ -1,0 +1,439 @@
+openapi: 3.0.0
+info:
+  version: '0.1.0'
+  title: 'Community Notice Board API'
+  description: 'RESTful API for a local community driven notice board.'
+# Added by API Auto Mocking Plugin
+servers:
+  - description: SwaggerHub API Auto Mocking
+    url: https://virtserver.swaggerhub.com/verse7/Community_Notice_Board_API/0.1.0
+tags:
+  - name: authentication
+    description: handles authentication and deauthentication
+  - name: needs-auth
+    description: api calls require the current user to be authenticated
+  - name: needs-admin
+    description: api calls require the current user to be an admin
+paths:
+  /users:
+    post:
+      tags:
+      - authentication
+      summary: creates a new user
+      operationId: createUser
+      description: |
+        Registers a new user in the system.
+      responses:
+        '201':
+          description: user created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          description: 'invalid input, user invalid'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '409':
+          description: user already exists,
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'  
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+        description: User to create
+  /users/login:
+    post:
+      tags:
+        - authentication
+      summary: authenticates a user
+      operationId: loginUser
+      description: |
+        Authenticates a user in the system.
+      responses:
+        '200':
+          description: user successfully logged in
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '400':
+          description: 'invalid input, user invalid'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginCredentials'
+        description: Login details
+  /posts:
+    get:
+      summary: gets all posts
+      operationId: searchPosts
+      description: |
+        By passing in the appropriate options, you can search for particular posts on the notice board.
+      parameters:
+        - in: query
+          name: searchString
+          description: pass an optional search string for looking up a post
+          required: false
+          schema:
+            type: string
+        - in: query
+          name: skip
+          description: number of records to skip for pagination
+          schema:
+            type: integer
+            format: int32
+            minimum: 0
+        - in: query
+          name: limit
+          description: maximum number of records to return
+          schema:
+            type: integer
+            format: int32
+            minimum: 0
+            maximum: 50
+      responses:
+        '200':
+          description: search results matching criteria
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Post'
+        '400':
+          description: bad input parameter
+    post:
+      tags:
+        - needs-auth
+      summary: creates a post
+      operationId: addPost
+      description: Adds a new post to the notice board
+      responses:
+        '201':
+          description: post created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Post'
+        '400':
+          description: 'invalid input, object invalid'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '409':
+          description: that post already exists,
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Post'
+        description: Post to add
+  /posts/{postId}:
+    get:
+      summary: get post by Id
+      description: returns a single post
+      operationId: getPostById
+      parameters:
+        - name: postId
+          in: path
+          description: ID of post to return
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: successfully retrieved post
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Post'
+        '400':
+          description: Invalid ID supplied
+        '404':
+          description: Post not found
+    put:
+      tags:
+        - needs-auth
+      summary: update a post by Id
+      description: update a single post
+      operationId: updatePostById
+      parameters:
+        - name: postId
+          in: path
+          description: ID of post to update
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: successfully updated post
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Post'
+        '400':
+          description: invalid data supplied
+        '404':
+          description: Post not found
+    delete:
+      tags:
+        - needs-auth
+      summary: delete a post by Id
+      description: delete a single post
+      operationId: deletePostById
+      parameters:
+        - name: postId
+          in: path
+          description: ID of post to delete
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '204':
+          description: successfully deleted post
+  /reports/posts:
+    get:
+      tags:
+        - needs-admin
+      summary: get all reported posts
+      operationId: searchReportedPosts
+      description: |
+        By passing in the appropriate options, you can search for particular reported posts.
+      parameters:
+        - in: query
+          name: searchString
+          description: pass an optional search string for looking up a post
+          required: false
+          schema:
+            type: string
+        - in: query
+          name: skip
+          description: number of records to skip for pagination
+          schema:
+            type: integer
+            format: int32
+            minimum: 0
+        - in: query
+          name: limit
+          description: maximum number of records to return
+          schema:
+            type: integer
+            format: int32
+            minimum: 0
+            maximum: 50
+      responses:
+        '200':
+          description: search results matching criteria
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Post'
+        '400':
+          description: bad input parameter
+    post:
+      tags:
+        - needs-auth
+      summary: report a post
+      operationId: reportPost
+      description: Creates a new report against a post
+      responses:
+        '201':
+          description: post created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Post'
+        '400':
+          description: 'invalid input, object invalid'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '409':
+          description: that post already exists,
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Report'
+        description: Report to create
+  /reports/posts/{postId}:
+    delete:
+      tags:
+        - needs-admin
+      summary: delete a report by Id
+      description: delete a single post
+      operationId: deleteReportById
+      parameters:
+        - name: postId
+          in: path
+          description: ID of report to delete
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '204':
+          description: successfully deleted report
+components:
+  schemas:
+    User:
+      type: object
+      required:
+        - trn
+        - firstName
+        - lastName
+        - email
+        - phone
+        - address
+      properties:
+        trn:
+          type: string
+          example: 123-456-789
+        firstName:
+          type: string
+          example: John
+        lastName:
+          type: string
+          example: Doe
+        email:
+          type: string
+          example: johndoe@example.com
+        password:
+          type: string
+          example: password123
+        phone:
+          type: string
+          example: 876-123-4567
+        address:
+          $ref: '#/components/schemas/Address'
+    Address:
+      type: object
+      required:
+        - id
+        - street
+        - city
+        - parish
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: d290f1ee-6c54-4b01-90e6-d701748f0851
+        street:
+          type: string
+          example: "17 Windsor Avenue"
+        city:
+          type: string
+          example: "Kingston 5"
+        parish:
+          type: string
+          example: "Kingston"
+    Post:
+      type: object
+      required:
+        - id
+        - userId
+        - title
+        - content
+        - createdOn
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: f1ed290e-654c-401b-90e6-48f0851d7017
+        userTRN:
+          type: string
+          example: 123-456-789
+        title:
+          type: string
+          example: Community Fun Day
+        content:
+          type: string
+          example: This community fun day promises to be the very best in prizes and surprises. Come out and support our neighborhood businesses and have a great time while doing it. Tickets are available at the community center.
+        createdOn:
+          type: string
+          format: date-time
+          example: '2016-08-29T09:12:33.001Z'
+    LoginCredentials:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          example: johndoe@example.com
+        password:
+          type: string
+          example: password123
+    LoginResponse:
+      type: object
+      required:
+        - token
+        - user
+      properties:
+        token: 
+          type: string
+          example: xxxxx.yyyyy.zzzzz
+        user:
+          $ref: '#/components/schemas/User'
+    Report:
+      type: object
+      required:
+        - postId
+        - reason
+        - userTRN
+      properties:
+        postId:
+          type: string
+          format: uuid
+          example: f1ed290e-654c-401b-90e6-48f0851d7017
+        reason:
+          type: string
+          example: Graphic images and illegal content
+        userTRN:
+          type: string
+          example: 123-456-789
+    ErrorModel:
+      type: object
+      required:
+        - code
+        - message
+        - errors
+      properties:
+        code:
+          type: integer
+          format: int32
+          example: 21
+        message:
+          type: string
+          example: Failed to create a new post.
+        errors:
+          type: array
+          items: {}
