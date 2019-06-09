@@ -90,3 +90,6 @@ ENV/
 
 # Node modules
 node_modules/
+
+# Visual Studio Code
+.vscode/
